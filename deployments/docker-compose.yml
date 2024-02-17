@@ -1,0 +1,30 @@
+version: '3'
+services:
+  bot-narrator:
+    image: bot-narrator:latest
+    container_name: bot-narrator
+    ports: 
+      - 8080:8080
+    env_file:
+      - .env
+    networks:
+      - private
+    depends_on:
+      - narrator-postgres
+    restart: always
+      
+    
+  narrator-postgres:
+    image: postgres:13
+    container_name: narrator-postgres
+    ports:
+      - 8432:5432
+    env_file:
+      - .env
+    networks:
+      - private
+
+networks:
+  private: 
+    driver: bridge
+    
