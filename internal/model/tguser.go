@@ -7,4 +7,5 @@ type TgUser struct {
 	TgId             int64
 	SteosvoiceApiKey string
 	VoiceId          int64
+	State            string
 }
