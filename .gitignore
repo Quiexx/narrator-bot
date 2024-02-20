@@ -25,3 +25,5 @@ deployments/images/*
 
 .env.prod
 
+*.tar.gz
+
