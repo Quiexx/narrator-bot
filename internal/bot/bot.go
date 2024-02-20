@@ -37,6 +37,10 @@ const (
 
 var userVoicesCash = map[uint][]*steosvoice.Voice{}
 var voicesMap = map[int64]*steosvoice.Voice{}
+var langs = map[int64]string{
+	1: "RU",
+	2: "EN",
+}
 
 type TgBot struct {
 	token          string
@@ -491,11 +495,17 @@ func (b *TgBot) sendVoiceDescription(update *tgbotapi.Update, tgUser *model.TgUs
 		sex = "Неизвестен"
 	}
 
+	lang, ok := langs[voice.LangId]
+	if !ok {
+		lang = "Неизвестен"
+	}
+
 	text := fmt.Sprintf(
-		"**%v**\n%v\n\nПол: %v",
+		"**%v**\n%v\n\nПол: %v\nРодной язык: %v",
 		name,
 		description,
 		sex,
+		lang,
 	)
 
 	backCallback := fmt.Sprintf("voice_page_%v", page)
