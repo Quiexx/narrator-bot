@@ -35,6 +35,11 @@ type GetSymbolsResp struct {
 	Symbols int64  `json:"symbols,omitempty"`
 }
 
+type StatusResp struct {
+	Status  bool   `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
 type GetSynthSpeechResp struct {
 	Status   bool   `json:"status,omitempty"`
 	Message  string `json:"message,omitempty"`
@@ -77,6 +82,17 @@ func (s *SteosVoiceAPI) GetVoices(apiKey string) (*GetVoiceResp, error) {
 		return nil, err
 	}
 
+	// if status false, the service returns strings in all fields :(
+	strep := &StatusResp{}
+	err = json.Unmarshal(body, strep)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strep.Status {
+		return &GetVoiceResp{Status: strep.Status, Message: strep.Message}, nil
+	}
+
 	gvrep := &GetVoiceResp{}
 	err = json.Unmarshal(body, gvrep)
 	if err != nil {
@@ -104,6 +120,17 @@ func (s *SteosVoiceAPI) GetSymbols(apiKey string) (*GetSymbolsResp, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	// if status false, the service returns strings in all fields :(
+	strep := &StatusResp{}
+	err = json.Unmarshal(body, strep)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strep.Status {
+		return &GetSymbolsResp{Status: strep.Status, Message: strep.Message}, nil
 	}
 
 	gsrep := &GetSymbolsResp{}
@@ -140,6 +167,17 @@ func (s *SteosVoiceAPI) GetSynthesizedSpeech(apiKey string, text string, voiceId
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	// if status false, the service returns strings in all fields :(
+	strep := &StatusResp{}
+	err = json.Unmarshal(body, strep)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strep.Status {
+		return &GetSynthSpeechResp{Status: strep.Status, Message: strep.Message}, nil
 	}
 
 	gssrep := &GetSynthSpeechResp{}

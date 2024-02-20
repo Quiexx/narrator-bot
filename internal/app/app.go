@@ -51,7 +51,7 @@ func Run(cfg *config.Config) error {
 		return err
 	}
 
-	err = bot.SetWebhooks()
+	// err = bot.SetWebhooks()
 
 	if err != nil {
 		return err

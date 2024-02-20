@@ -30,6 +30,9 @@ const (
 	SET_API_KEY_STATE = "SET_API_KEY"
 
 	VOICE_PAGE_SIZE = 5
+
+	NOT_ENOUGH_SYMBOLS_ERROR = "Not enough symbols"
+	CONNECTION_TIMEOUT_ERROR = "Connection timeout"
 )
 
 var userVoicesCash = map[uint][]*steosvoice.Voice{}
@@ -80,9 +83,13 @@ func (b *TgBot) SetWebhooks() error {
 }
 
 func (b *TgBot) Start() error {
-	updateCh := b.bot.ListenForWebhook(b.webhookPattern)
+	// updateCh := b.bot.ListenForWebhook(b.webhookPattern)
 
-	for update := range updateCh {
+	u := tgbotapi.NewUpdate(0)
+	u.Timeout = 60
+
+	updates := b.bot.GetUpdatesChan(u)
+	for update := range updates {
 		go b.handleUpdate(&update)
 	}
 
@@ -110,6 +117,11 @@ func (b *TgBot) handleUpdate(update *tgbotapi.Update) {
 		go b.handleCallback(update, tgUser)
 	case update.Message != nil && update.Message.Text != "":
 		go b.synthesize(update, tgUser)
+	case update.Message != nil && update.Message.Caption != "":
+		update.Message.Text = update.Message.Caption
+		go b.synthesize(update, tgUser)
+	default:
+		go b.sendMessage(update, templates.CAN_NOT_HANDLE)
 	}
 
 }
@@ -149,10 +161,19 @@ func (b *TgBot) synthesize(update *tgbotapi.Update, tgUser *model.TgUser) {
 	}
 
 	result, err := b.svApi.GetSynthesizedSpeech(tgUser.SteosvoiceApiKey, update.Message.Text, tgUser.VoiceId)
-	if err != nil || !result.Status {
+
+	switch {
+	case err != nil:
 		log.Printf("failed to synthesize text: %v\n", err)
-		go b.sendMessage(update, templates.FAIL_MESSAGE)
-	} else {
+		go b.sendMessage(update, templates.SOMETHING_GONE_WRONG_MESSAGE)
+	case !result.Status && result.Message == NOT_ENOUGH_SYMBOLS_ERROR:
+		go b.sendMessage(update, templates.NOT_ENOUGH_SYMBOLS)
+	case !result.Status && result.Message == CONNECTION_TIMEOUT_ERROR:
+		go b.sendMessage(update, templates.SERVICE_NOT_AVAILABLE)
+	case !result.Status:
+		log.Printf("failed to synthesize text: %v\n", result.Message)
+		go b.sendMessage(update, templates.SOMETHING_GONE_WRONG_MESSAGE)
+	default:
 		go b.sendVoice(update, result.AudioUrl)
 	}
 

@@ -22,3 +22,6 @@ go.work
 
 # docker images
 deployments/images/*
+
+.env.prod
+
